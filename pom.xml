@@ -15,8 +15,8 @@
     <groupId>com.healthlife</groupId>
     <artifactId>report-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>alert-service</name>
-    <description>alert-service</description>
+    <name>report-service</name>
+    <description>report-service</description>
 
     <properties>
         <java.version>17</java.version>
@@ -24,6 +24,15 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
