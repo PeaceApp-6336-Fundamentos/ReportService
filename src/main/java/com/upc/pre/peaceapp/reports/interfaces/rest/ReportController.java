@@ -1,13 +1,14 @@
 package com.upc.pre.peaceapp.reports.interfaces.rest;
 
 import com.upc.pre.peaceapp.reports.domain.model.aggregates.Report;
-import com.upc.pre.peaceapp.reports.domain.model.commands.CreateReportCommand;
-import com.upc.pre.peaceapp.reports.domain.model.commands.DeleteReportByIdCommand;
+import com.upc.pre.peaceapp.reports.domain.model.commands.*;
+import com.upc.pre.peaceapp.reports.domain.model.queries.GetPublicReportsQuery;
 import com.upc.pre.peaceapp.reports.domain.model.queries.GetReportByIdQuery;
 import com.upc.pre.peaceapp.reports.domain.model.queries.GetReportsByUserIdQuery;
 import com.upc.pre.peaceapp.reports.domain.model.queries.GetAllReportsQuery;
 import com.upc.pre.peaceapp.reports.domain.services.ReportCommandService;
 import com.upc.pre.peaceapp.reports.domain.services.ReportQueryService;
+import com.upc.pre.peaceapp.reports.interfaces.rest.resources.RejectReportResource;
 import com.upc.pre.peaceapp.reports.interfaces.rest.resources.ReportResource;
 import com.upc.pre.peaceapp.reports.interfaces.rest.resources.CreateReportResource;
 import com.upc.pre.peaceapp.reports.interfaces.rest.transform.ReportResourceFromEntityAssembler;
@@ -52,6 +53,33 @@ public class ReportController {
         boolean exists = reportQueryService.handle(new GetReportByIdQuery(id)).isPresent();
         return ResponseEntity.ok(exists);
     }
+    // ----------------------------------------------------------------------
+// GET PUBLIC REPORTS (STATE = APPROVED)
+// ----------------------------------------------------------------------
+    @Operation(summary = "Get all approved public reports",
+            description = "Returns all reports that are marked as APPROVED.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Approved reports retrieved successfully",
+                    content = @Content(mediaType = APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ReportResource.class))),
+            @ApiResponse(responseCode = "204", description = "No approved reports found")
+    })
+    @GetMapping("/public")
+    public ResponseEntity<List<ReportResource>> getPublicReports() {
+
+        log.info("Fetching all APPROVED public reports");
+
+        var reports = reportQueryService.handle(new GetPublicReportsQuery());
+
+        if (reports.isEmpty()) return ResponseEntity.noContent().build();
+
+        var reportResources = reports.stream()
+                .map(ReportResourceFromEntityAssembler::toResourceFromEntity)
+                .toList();
+
+        return ResponseEntity.ok(reportResources);
+    }
+
     // ----------------------------------------------------------------------
     // CREATE REPORT
     // ----------------------------------------------------------------------
@@ -104,6 +132,79 @@ public class ReportController {
         return report
                 .map(r -> ResponseEntity.ok(ReportResourceFromEntityAssembler.toResourceFromEntity(r)))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    }
+    // ----------------------------------------------------------------------
+// CHANGE REPORT STATE: IN REVIEW
+// ----------------------------------------------------------------------
+    @Operation(summary = "Mark report as In Review")
+    @PutMapping("/{id}/review")
+    public ResponseEntity<?> markReportInReview(@PathVariable Long id) {
+
+        try {
+            reportCommandService.handle(new MarkReportInReviewCommand(id));
+
+            var updated = reportQueryService.handle(new GetReportByIdQuery(id))
+                    .orElseThrow();
+
+            return ResponseEntity.ok(
+                    ReportResourceFromEntityAssembler.toResourceFromEntity(updated)
+            );
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    // ----------------------------------------------------------------------
+// CHANGE REPORT STATE: APPROVED
+// ----------------------------------------------------------------------
+    @Operation(summary = "Approve a report")
+    @PutMapping("/{id}/approve")
+    public ResponseEntity<?> approveReport(@PathVariable Long id) {
+
+        try {
+            reportCommandService.handle(new ApproveReportCommand(id));
+
+            var updated = reportQueryService.handle(new GetReportByIdQuery(id))
+                    .orElseThrow();
+
+            return ResponseEntity.ok(
+                    ReportResourceFromEntityAssembler.toResourceFromEntity(updated)
+            );
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    // ----------------------------------------------------------------------
+// CHANGE REPORT STATE: REJECTED (with reason)
+// ----------------------------------------------------------------------
+
+    @Operation(summary = "Reject a report", description = "Rejects the report with an explanation for the user.")
+    @PutMapping("/{id}/reject")
+    public ResponseEntity<?> rejectReport(@PathVariable Long id,
+                                          @RequestBody RejectReportResource resource) {
+
+        try {
+            reportCommandService.handle(new RejectReportCommand(id, resource.reason()));
+
+            var updated = reportQueryService.handle(new GetReportByIdQuery(id))
+                    .orElseThrow();
+
+            return ResponseEntity.ok(
+                    ReportResourceFromEntityAssembler.toResourceFromEntity(updated)
+            );
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
     // ----------------------------------------------------------------------

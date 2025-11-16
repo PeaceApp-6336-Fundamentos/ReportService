@@ -1,5 +1,6 @@
 package com.upc.pre.peaceapp.reports.interfaces.rest.resources;
 
+import com.upc.pre.peaceapp.reports.domain.model.valueobjects.ReportState;
 import com.upc.pre.peaceapp.reports.domain.model.valueobjects.ReportType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Date;
@@ -34,6 +35,9 @@ public record ReportResource(
         @Schema(description = "Longitude coordinate of the report", example = "-77.042793")
         String longitude,
 
+        @Schema(description = "Current state of the report", example = "APPROVED")
+        ReportState state,
+        String rejectionReason,
         @Schema(description = "Date when the report was created", example = "2025-10-08T20:15:37.000+00:00")
         Date createdAt,
 

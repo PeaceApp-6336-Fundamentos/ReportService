@@ -4,6 +4,8 @@ import com.upc.pre.peaceapp.reports.domain.model.aggregates.Report;
 import com.upc.pre.peaceapp.reports.domain.model.queries.GetReportByIdQuery;
 import com.upc.pre.peaceapp.reports.domain.model.queries.GetReportsByUserIdQuery;
 import com.upc.pre.peaceapp.reports.domain.model.queries.GetAllReportsQuery;
+import com.upc.pre.peaceapp.reports.domain.model.queries.GetPublicReportsQuery;
+import com.upc.pre.peaceapp.reports.domain.model.valueobjects.ReportState;
 import com.upc.pre.peaceapp.reports.domain.services.ReportQueryService;
 import com.upc.pre.peaceapp.reports.infrastructure.persistence.jpa.ReportRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -38,5 +40,11 @@ public class ReportQueryServiceImpl implements ReportQueryService {
     public List<Report> handle(GetAllReportsQuery query) {
         log.info("Fetching all reports");
         return reportRepository.findAll();
+    }
+
+    @Override
+    public List<Report> handle(GetPublicReportsQuery query) {
+        log.info("Fetching public (APPROVED) reports");
+        return reportRepository.findAllByState(ReportState.APPROVED);
     }
 }

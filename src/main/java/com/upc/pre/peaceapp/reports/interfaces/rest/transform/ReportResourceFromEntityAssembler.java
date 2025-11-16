@@ -18,6 +18,8 @@ public class ReportResourceFromEntityAssembler {
                 report.getImageUrl(),
                 report.getLatitude(),
                 report.getLongitude(),
+                report.getState(),
+                report.getRejectionReason(),
                 report.getCreatedAt(),
                 report.getUpdatedAt()
         );
