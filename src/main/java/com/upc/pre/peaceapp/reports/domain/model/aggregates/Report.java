@@ -8,6 +8,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * Represents the Report aggregate entity within the bounded context of Reports.
+ * A Report contains detailed information about an incident reported by a user,
+ * including its location, type, and current processing state.
+ */
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -54,6 +60,19 @@ public class Report extends AuditableAbstractAggregateRoot {
 
 
     // Constructor
+    /**
+     * Constructor for creating a new Report instance.
+     * Initializes the report state to {@code PENDING}.
+     *
+     * @param title The concise title of the report.
+     * @param description The detailed description of the incident.
+     * @param location The description of the location.
+     * @param type The type of incident ({@link ReportType}).
+     * @param userId The ID of the reporting user.
+     * @param imageUrl The URL of the image evidence.
+     * @param latitude The latitude coordinate.
+     * @param longitude The longitude coordinate.
+     */
     public Report(String title,
                   String description,
                   String location,
